@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running Shoe Finder | Decathlon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f3f4f6; }
+        .decathlon-blue { background-color: #007ABD; }
+        /* 模仿您分享的範例 UX：大按鈕卡片 */
+        .card-button {
+            @apply bg-white border-2 border-transparent rounded-3xl p-8 shadow-sm hover:shadow-xl hover:border-[#007ABD] transition-all cursor-pointer text-center flex flex-col items-center justify-center min-h-[160px];
+        }
+        .result-card {
+            @apply bg-white rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center gap-6 mb-6 transform hover:scale-[1.02] transition-transform;
+        }
+    </style>
+</head>
+<body x-data="shoeApp()">
+
+    <header class="decathlon-blue p-5 text-white shadow-lg sticky top-0 z-50 flex justify-between items-center">
+        <div class="font-black italic text-2xl tracking-tighter uppercase cursor-pointer" @click="reset()">Decathlon</div>
+        <button @click="lang = lang === 'en' ? 'zh' : 'en'" class="bg-white text-[#007ABD] px-4 py-1 rounded-full text-xs font-bold uppercase" x-text="lang === 'en' ? '繁體中文' : 'English'"></button>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-6 py-12">
+        
+        <div class="w-full bg-gray-200 h-2 rounded-full mb-12 overflow-hidden">
+            <div class="decathlon-blue h-full transition-all duration-700" :style="'width:' + (step/4)*100 + '%'"></div>
+        </div>
+
+        <div x-show="step <= 3" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4">
+            <h1 class="text-4xl font-black text-gray-900 mb-4 leading-tight" x-text="getQuestion().title"></h1>
+            <p class="text-gray-500 text-lg mb-10" x-text="getQuestion().subtitle"></p>
+
+            <div class="grid grid-cols-1 gap-6">
+                <template x-for="opt in getQuestion().options">
+                    <div class="card-button" @click="handleSelect(opt.value)">
+                        <span class="text-2xl font-black text-gray-800 mb-2" x-text="opt.label"></span>
+                        <span class="text-gray-500 font-medium" x-text="opt.desc"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div x-show="step === 4" x-transition:enter="transition ease-out duration-500">
+            <h2 class="text-3xl font-black mb-2 text-gray-900" x-text="lang === 'zh' ? '為您推薦的 3 款跑鞋' : '3 Recommended Shoes for You'"></h2>
+            <p class="text-gray-500 mb-10" x-text="lang === 'zh' ? '根據您的需求，以下是我們的最佳建議：' : 'Based on your needs, here are our top picks:'"></p>
+            
+            <div class="results-list">
+                <template x-for="shoe in filteredShoes" :key="shoe.id">
+                    <div class="result-card">
+                        <img :src="shoe.img" class="w-48 h-48 object-contain">
+                        <div class="flex-1 text-center md:text-left">
+                            <h3 class="font-black text-2xl text-gray-900 mb-2" x-text="lang === 'zh' ? shoe.name_zh : shoe.name_en"></h3>
+                            <div class="text-3xl font-black text-[#007ABD] mb-6">$<span x-text="shoe.price"></span></div>
+                            <a :href="lang === 'zh' ? shoe.url_zh : shoe.url_en" target="_blank" 
+                               class="bg-[#007ABD] text-white font-black px-10 py-4 rounded-full text-sm hover:bg-blue-700 transition-colors uppercase tracking-widest inline-block shadow-lg">
+                               View Product
+                            </a>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="filteredShoes.length === 0">
+                    <div class="bg-white p-12 rounded-3xl text-center shadow-inner">
+                        <p class="text-xl font-bold text-gray-400">Sorry, no exact matches. Please try again!</p>
+                    </div>
+                </template>
+            </div>
+
+            <button @click="reset()" class="w-full mt-12 py-5 border-2 border-dashed border-gray-300 rounded-3xl text-gray-400 font-black uppercase tracking-widest hover:bg-gray-100 transition-all">
+                ← Start Over
+            </button>
+        </div>
+    </main>
+
+    <script>
+        function shoeApp() {
+            return {
+                step: 1,
+                lang: 'zh',
+                answers: { terrain: '', budget: '', intensity: '' },
+                
+                // 直接將數據嵌入代碼，確保 100% 運行成功
+                products: [
+                    { id: "8913928", name_en: "Kiprun Kipnext", name_zh: "男款路跑鞋 KipX", price: 599, tags: ["road", "budget_low", "occasional"], img: "https://contents.mediadecathlon.com/p8913928/sq/image.jpg", url_en: "https://www.decathlon.com.hk/en-HK/p/8913928.html", url_zh: "https://www.decathlon.com.hk/zh/p/8913928.html" },
+                    { id: "8931228", name_en: "KD900X LD2 Racing", name_zh: "碳板路跑鞋 KD900X LD2", price: 1299, tags: ["road", "budget_high", "pro"], img: "https://contents.mediadecathlon.com/p8931228/sq/image.jpg", url_en: "https://www.decathlon.com.hk/en-HK/p/8931228.html", url_zh: "https://www.decathlon.com.hk/zh/p/8931228.html" },
+                    { id: "8960535", name_en: "Kiprun Kipride Light", name_zh: "男款路跑鞋 Kipride", price: 649, tags: ["road", "budget_low", "occasional"], img: "https://contents.mediadecathlon.com/p8960535/sq/image.jpg", url_en: "https://www.decathlon.com.hk/en-HK/p/8960535.html", url_zh: "https://www.decathlon.com.hk/zh/p/8960535.html" },
+                    { id: "8961381", name_en: "Kipstorm Elite Carbon", name_zh: "碳板路跑鞋 Kipstorm Elite", price: 1299, tags: ["road", "budget_high", "pro"], img: "https://contents.mediadecathlon.com/p8961381/sq/image.jpg", url_en: "https://www.decathlon.com.hk/en-HK/p/8961381.html", url_zh: "https://www.decathlon.com.hk/zh/p/8961381.html" }
+                ],
+
+                getQuestion() {
+                    const qs = {
+                        zh: [
+                            { title: "您通常在哪裡跑步？", subtitle: "Q1: Terrain Type", options: [{label:"公路 / 田徑場", desc:"Road / Track", value:"road"}, {label:"越野 / 山徑", desc:"Trail", value:"trail"}] },
+                            { title: "您的購鞋預算？", subtitle: "Q2: Budget Range", options: [{label:"入門首選 ($ <800)", desc:"Great Value", value:"budget_low"}, {label:"專業技術 ($ >800)", desc:"Premium Performance", value:"budget_high"}] },
+                            { title: "您的跑步頻率？", subtitle: "Q3: Intensity", options: [{label:"偶爾慢跑", desc:"Occasional / Jogging", value:"occasional"}, {label:"馬拉松訓練", desc:"Frequent / Pro Training", value:"pro"}] }
+                        ],
+                        en: [
+                            { title: "Where do you run?", subtitle: "Q1: Terrain Type", options: [{label:"Road / Track", desc:"Hard surfaces", value:"road"}, {label:"Trail", desc:"Off-road / Mountains", value:"trail"}] },
+                            { title: "What is your budget?", subtitle: "Q2: Budget Range", options: [{label:"Entry Level ($ <800)", desc:"Value for money", value:"budget_low"}, {label:"Pro Level ($ >800)", desc:"Advanced Tech", value:"budget_high"}] },
+                            { title: "How often do you run?", subtitle: "Q3: Intensity", options: [{label:"Occasional", desc:"1-2 times a week", value:"occasional"}, {label:"Pro Training", desc:"3+ times a week", value:"pro"}] }
+                        ]
+                    };
+                    return qs[this.lang][this.step - 1];
+                },
+
+                handleSelect(val) {
+                    if (this.step === 1) this.answers.terrain = val;
+                    if (this.step === 2) this.answers.budget = val;
+                    if (this.step === 3) this.answers.intensity = val;
+                    this.step++;
+                },
+
+                get filteredShoes() {
+                    // 根據預算和地型篩選，如果沒結果就顯示前三名熱門
+                    let results = this.products.filter(p => {
+                        return p.tags.includes(this.answers.terrain) && p.tags.includes(this.answers.budget);
+                    });
+                    return results.length > 0 ? results.slice(0, 3) : this.products.slice(0, 3);
+                },
+
+                reset() { this.step = 1; this.answers = { terrain: '', budget: '', intensity: '' }; }
+            }
+        }
+    </script>
+</body>
+</html>
